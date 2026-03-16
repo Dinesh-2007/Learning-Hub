@@ -1,10 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import engine, Base
-import models
-
-# Create all tables
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Study Platform API", version="1.0.0")
 

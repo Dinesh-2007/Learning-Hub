@@ -1,18 +1,38 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 import os
+from datetime import datetime
+from types import SimpleNamespace
+
+from pymongo import MongoClient, ReturnDocument
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'studyplatform.db')}"
+MONGO_DATABASE_URL = os.getenv("MONGO_DATABASE_URL", "mongodb://localhost:27017")
+MONGO_DATABASE_NAME = os.getenv("MONGO_DATABASE_NAME", "studyplatform")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+client = MongoClient(MONGO_DATABASE_URL)
+db = client[MONGO_DATABASE_NAME]
+
 
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    yield db
+
+
+def get_next_id(database, collection_name: str) -> int:
+    counter = database.counters.find_one_and_update(
+        {"_id": collection_name},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+    return int(counter["seq"])
+
+
+def now_utc() -> datetime:
+    return datetime.utcnow()
+
+
+def as_obj(document: dict | None):
+    if not document:
+        return None
+    payload = {k: v for k, v in document.items() if k != "_id"}
+    return SimpleNamespace(**payload)
+

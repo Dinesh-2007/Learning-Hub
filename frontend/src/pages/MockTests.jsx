@@ -14,30 +14,122 @@ import {
 
 const DIFF_COLORS = { easy: '#51cf66', medium: '#ffa94d', hard: '#ff6b6b' };
 
+const FILTER_INSIGHT_FALLBACK = {
+  all: {
+    radarData: [
+      { platform: 'Subject Core', score: 76 },
+      { platform: 'Aptitude', score: 71 },
+      { platform: 'Coding', score: 68 },
+      { platform: 'Time Mgmt', score: 64 },
+      { platform: 'Consistency', score: 73 },
+    ],
+    strong: [
+      { label: 'Subject Theory', value: 76 },
+      { label: 'Consistency', value: 73 },
+      { label: 'Aptitude Speed', value: 71 },
+    ],
+    weak: [
+      { label: 'Coding Accuracy', value: 68 },
+      { label: 'Time Management', value: 64 },
+      { label: 'Revision Habit', value: 62 },
+    ],
+  },
+  subject: {
+    radarData: [
+      { platform: 'Data Structures', score: 78 },
+      { platform: 'DBMS', score: 72 },
+      { platform: 'OS', score: 64 },
+      { platform: 'CN', score: 61 },
+      { platform: 'Problem Solving', score: 75 },
+    ],
+    strong: [
+      { label: 'Data Structures', value: 78 },
+      { label: 'Problem Solving', value: 75 },
+      { label: 'DBMS', value: 72 },
+    ],
+    weak: [
+      { label: 'Computer Networks', value: 61 },
+      { label: 'Operating Systems', value: 64 },
+      { label: 'Advanced SQL', value: 66 },
+    ],
+  },
+  aptitude: {
+    radarData: [
+      { platform: 'Quant', score: 74 },
+      { platform: 'Reasoning', score: 69 },
+      { platform: 'Verbal', score: 66 },
+      { platform: 'Speed', score: 71 },
+      { platform: 'Accuracy', score: 68 },
+    ],
+    strong: [
+      { label: 'Quant Fundamentals', value: 74 },
+      { label: 'Speed in Easy Sets', value: 71 },
+      { label: 'Logical Basics', value: 69 },
+    ],
+    weak: [
+      { label: 'Verbal Accuracy', value: 66 },
+      { label: 'Puzzle Consistency', value: 64 },
+      { label: 'Long Set Time Mgmt', value: 62 },
+    ],
+  },
+  coding: {
+    radarData: [
+      { platform: 'Arrays', score: 79 },
+      { platform: 'Strings', score: 75 },
+      { platform: 'Trees', score: 66 },
+      { platform: 'Graphs', score: 59 },
+      { platform: 'DP', score: 57 },
+      { platform: 'Debugging', score: 70 },
+    ],
+    strong: [
+      { label: 'Arrays & Strings', value: 79 },
+      { label: 'Debugging', value: 70 },
+      { label: 'Tree Basics', value: 66 },
+    ],
+    weak: [
+      { label: 'Dynamic Programming', value: 57 },
+      { label: 'Graph Traversal', value: 59 },
+      { label: 'Edge-case Handling', value: 61 },
+    ],
+  },
+};
+
 export default function MockTests() {
-  const [tests, setTests] = useState([]);
+  const [allTests, setAllTests] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [filter, setFilter] = useState('all');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const params = filter !== 'all' ? `?test_type=${filter}` : '';
-    api.get(`/tests${params}`).then(r => setTests(r.data)).catch(() => setTests([]));
-  }, [filter]);
+    api.get('/tests').then(r => setAllTests(r.data)).catch(() => setAllTests([]));
+  }, []);
 
   useEffect(() => {
     api.get('/tests/submissions/history').then(r => setSubmissions(r.data)).catch(() => setSubmissions([]));
   }, []);
 
-  const conceptAnalytics = useMemo(() => {
+  const tests = useMemo(() => {
+    if (filter === 'all') return allTests;
+    return allTests.filter(test => test.test_type === filter);
+  }, [allTests, filter]);
+
+  const performanceAnalytics = useMemo(() => {
     const testMap = new Map(tests.map(test => [test.id, test]));
-    const stats = {};
+    const conceptStats = {};
+    const platformStats = {};
 
     submissions.forEach(submission => {
       const test = testMap.get(submission.test_id);
       if (!test) {
         return;
       }
+
+      const platform = test.subject || test.test_type || 'General';
+      if (!platformStats[platform]) {
+        platformStats[platform] = { label: platform, totalAccuracy: 0, attempts: 0 };
+      }
+      platformStats[platform].totalAccuracy += Number(submission.accuracy || 0);
+      platformStats[platform].attempts += 1;
 
       const questions = test.questions || [];
       questions.forEach(question => {
@@ -54,31 +146,45 @@ export default function MockTests() {
           test.subject ||
           `${test.test_type} concepts`;
 
-        if (!stats[concept]) {
-          stats[concept] = { concept, attempted: 0, correct: 0 };
+        if (!conceptStats[concept]) {
+          conceptStats[concept] = { concept, attempted: 0, correct: 0 };
         }
 
-        stats[concept].attempted += 1;
+        conceptStats[concept].attempted += 1;
         if (answer === question.correct_answer) {
-          stats[concept].correct += 1;
+          conceptStats[concept].correct += 1;
         }
       });
     });
 
-    const concepts = Object.values(stats)
+    const concepts = Object.values(conceptStats)
       .map(item => ({
         ...item,
         accuracy: Math.round((item.correct / item.attempted) * 100),
       }))
       .sort((a, b) => b.attempted - a.attempted);
 
-    const radarData = concepts.slice(0, 6).map(item => ({
-      concept: item.concept.length > 18 ? `${item.concept.slice(0, 18)}...` : item.concept,
-      accuracy: item.accuracy,
+    const platformRows = Object.values(platformStats)
+      .map(item => ({
+        label: item.label,
+        value: Math.round(item.totalAccuracy / item.attempts),
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    let radarData = platformRows.slice(0, 6).map(item => ({
+      platform: item.label.length > 16 ? `${item.label.slice(0, 16)}...` : item.label,
+      score: item.value,
     }));
 
-    const strong = [...concepts].sort((a, b) => b.accuracy - a.accuracy).slice(0, 4);
-    const weak = [...concepts].sort((a, b) => a.accuracy - b.accuracy).slice(0, 4);
+    let strong = platformRows.slice(0, 3);
+    let weak = [...platformRows].sort((a, b) => a.value - b.value).slice(0, 3);
+
+    if (radarData.length === 0) {
+      const fallback = FILTER_INSIGHT_FALLBACK[filter] || FILTER_INSIGHT_FALLBACK.all;
+      radarData = fallback.radarData;
+      strong = fallback.strong;
+      weak = fallback.weak;
+    }
 
     return { concepts, radarData, strong, weak };
   }, [tests, submissions]);
@@ -99,45 +205,41 @@ export default function MockTests() {
 
         <div className="card test-concept-analytics-card">
           <div className="card-header">
-            <h3>Concept Accuracy Star Plot</h3>
+            <h3>Performance Star Plot</h3>
             <span className="mini-text">
               Filter: {filter.charAt(0).toUpperCase() + filter.slice(1)}
             </span>
           </div>
 
-          {conceptAnalytics.radarData.length > 0 ? (
-            <div className="test-concept-grid">
-              <div className="chart-container test-concept-chart">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={conceptAnalytics.radarData}>
-                    <PolarGrid stroke="rgba(31, 36, 48, 0.12)" />
-                    <PolarAngleAxis dataKey="concept" tick={{ fill: '#697089', fontSize: 11 }} />
-                    <PolarRadiusAxis domain={[0, 100]} tick={{ fill: '#697089', fontSize: 11 }} />
-                    <Radar dataKey="accuracy" stroke="#6c63ff" fill="rgba(108, 99, 255, 0.28)" fillOpacity={0.8} />
-                  </RadarChart>
-                </ResponsiveContainer>
+          {performanceAnalytics.radarData.length > 0 ? (
+            <div className="test-performance-layout">
+              <div className="test-insight-panel">
+                <h4>Strong Platforms</h4>
+                {performanceAnalytics.strong.map(item => (
+                  <div key={item.label} className="test-concept-list-item good">
+                    <span>{item.label}</span>
+                    <strong>{item.value}%</strong>
+                  </div>
+                ))}
+
+                <h4 className="test-insight-subtitle">Needs Improvement</h4>
+                {performanceAnalytics.weak.map(item => (
+                  <div key={item.label} className="test-concept-list-item weak">
+                    <span>{item.label}</span>
+                    <strong>{item.value}%</strong>
+                  </div>
+                ))}
               </div>
 
-              <div className="test-concept-lists">
-                <div className="test-concept-list-box">
-                  <h4>Strong Concepts</h4>
-                  {conceptAnalytics.strong.map(item => (
-                    <div key={item.concept} className="test-concept-list-item good">
-                      <span>{item.concept}</span>
-                      <strong>{item.accuracy}%</strong>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="test-concept-list-box">
-                  <h4>Weak Concepts</h4>
-                  {conceptAnalytics.weak.map(item => (
-                    <div key={item.concept} className="test-concept-list-item weak">
-                      <span>{item.concept}</span>
-                      <strong>{item.accuracy}%</strong>
-                    </div>
-                  ))}
-                </div>
+              <div className="chart-container test-concept-chart">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={performanceAnalytics.radarData}>
+                    <PolarGrid stroke="rgba(31, 36, 48, 0.12)" />
+                    <PolarAngleAxis dataKey="platform" tick={{ fill: '#697089', fontSize: 11 }} />
+                    <PolarRadiusAxis domain={[0, 100]} tick={{ fill: '#697089', fontSize: 11 }} />
+                    <Radar dataKey="score" stroke="#6c63ff" fill="rgba(108, 99, 255, 0.28)" fillOpacity={0.8} />
+                  </RadarChart>
+                </ResponsiveContainer>
               </div>
             </div>
           ) : (

@@ -1035,6 +1035,31 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   margin-bottom: 18px;
 }
 
+.test-performance-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 14px;
+}
+
+.test-insight-panel {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.test-insight-panel h4 {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+}
+
+.test-insight-subtitle {
+  margin-top: 8px;
+}
+
 .test-concept-grid {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
@@ -2408,6 +2433,7 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
   .interview-chart-grid { grid-template-columns: 1fr; }
   .interview-timeline-groups { grid-template-columns: 1fr; }
   .test-concept-grid { grid-template-columns: 1fr; }
+  .test-performance-layout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {

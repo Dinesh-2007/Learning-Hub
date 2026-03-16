@@ -1,106 +1,147 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from database import get_db
-from auth import get_current_user
 from datetime import datetime, timedelta
-import models, schemas
+
+from fastapi import APIRouter, Depends
+from typing import Any
+
+from auth import get_current_user
+from database import get_db, get_next_id
 
 router = APIRouter(prefix="/api/gamification", tags=["Gamification"])
 
 
-@router.get("/streak", response_model=schemas.StreakOut)
-def get_streak(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    streak = db.query(models.Streak).filter(models.Streak.user_id == current_user.id).first()
-    if not streak:
-        streak = models.Streak(user_id=current_user.id)
-        db.add(streak)
-        db.commit()
-        db.refresh(streak)
+def _clean(doc: dict | None):
+    if not doc:
+        return None
+    doc.pop("_id", None)
+    return doc
+
+
+def _get_or_create_streak(db: Any, user_id: int) -> dict:
+    streak = db.streaks.find_one({"user_id": user_id})
+    if streak:
+        return streak
+
+    streak = {
+        "id": get_next_id(db, "streaks"),
+        "user_id": user_id,
+        "current_streak": 0,
+        "longest_streak": 0,
+        "total_points": 0,
+        "last_activity_date": None,
+    }
+    db.streaks.insert_one(streak)
     return streak
 
 
+@router.get("/streak")
+def get_streak(current_user: dict = Depends(get_current_user), db: Any = Depends(get_db)):
+    streak = _get_or_create_streak(db, current_user["id"])
+    return _clean(streak)
+
+
 @router.post("/log-activity")
-def log_activity(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    streak = db.query(models.Streak).filter(models.Streak.user_id == current_user.id).first()
-    if not streak:
-        streak = models.Streak(user_id=current_user.id)
-        db.add(streak)
-        db.commit()
-        db.refresh(streak)
-    
+def log_activity(current_user: dict = Depends(get_current_user), db: Any = Depends(get_db)):
+    streak = _get_or_create_streak(db, current_user["id"])
+
     today = datetime.utcnow().date()
-    last = streak.last_activity_date.date() if streak.last_activity_date else None
-    
+    last_activity = streak.get("last_activity_date")
+    last = last_activity.date() if last_activity else None
+
     if last == today:
-        return {"message": "Already logged today", "current_streak": streak.current_streak}
-    
+        return {"message": "Already logged today", "current_streak": streak.get("current_streak", 0)}
+
+    current_streak = int(streak.get("current_streak", 0))
     if last == today - timedelta(days=1):
-        streak.current_streak += 1
+        current_streak += 1
     else:
-        streak.current_streak = 1
-    
-    streak.longest_streak = max(streak.longest_streak, streak.current_streak)
-    streak.total_points += 10
-    streak.last_activity_date = datetime.utcnow()
-    db.commit()
-    
-    # Check for badge awards
-    _check_badges(current_user.id, streak, db)
-    
-    return {"current_streak": streak.current_streak, "points": streak.total_points}
+        current_streak = 1
+
+    longest_streak = max(int(streak.get("longest_streak", 0)), current_streak)
+    total_points = int(streak.get("total_points", 0)) + 10
+
+    db.streaks.update_one(
+        {"user_id": current_user["id"]},
+        {
+            "$set": {
+                "current_streak": current_streak,
+                "longest_streak": longest_streak,
+                "total_points": total_points,
+                "last_activity_date": datetime.utcnow(),
+            }
+        },
+    )
+
+    _check_badges(current_user["id"], current_streak, db)
+    return {"current_streak": current_streak, "points": total_points}
 
 
-def _check_badges(user_id: int, streak: models.Streak, db: Session):
+def _check_badges(user_id: int, current_streak: int, db: Any):
     badges_to_check = [
-        (7, "7-Day Warrior", "🔥", "Maintained a 7-day study streak"),
-        (30, "Monthly Master", "🏆", "Maintained a 30-day study streak"),
+        (7, "7-Day Warrior", "fire", "Maintained a 7-day study streak"),
+        (30, "Monthly Master", "trophy", "Maintained a 30-day study streak"),
     ]
-    for days, name, icon, desc in badges_to_check:
-        if streak.current_streak >= days:
-            badge = db.query(models.Badge).filter(models.Badge.name == name).first()
-            if not badge:
-                badge = models.Badge(name=name, description=desc, icon=icon)
-                db.add(badge)
-                db.commit()
-                db.refresh(badge)
-            
-            existing = db.query(models.UserBadge).filter(
-                models.UserBadge.user_id == user_id, models.UserBadge.badge_id == badge.id
-            ).first()
-            if not existing:
-                db.add(models.UserBadge(user_id=user_id, badge_id=badge.id))
-                db.commit()
+    for days, name, icon, description in badges_to_check:
+        if current_streak < days:
+            continue
+
+        badge = db.badges.find_one({"name": name})
+        if not badge:
+            badge = {
+                "id": get_next_id(db, "badges"),
+                "name": name,
+                "description": description,
+                "icon": icon,
+            }
+            db.badges.insert_one(badge)
+
+        existing = db.user_badges.find_one({"user_id": user_id, "badge_id": badge["id"]})
+        if not existing:
+            db.user_badges.insert_one(
+                {
+                    "id": get_next_id(db, "user_badges"),
+                    "user_id": user_id,
+                    "badge_id": badge["id"],
+                    "earned_at": datetime.utcnow(),
+                }
+            )
 
 
 @router.get("/badges")
-def get_badges(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    user_badges = db.query(models.UserBadge).filter(models.UserBadge.user_id == current_user.id).all()
-    all_badges = db.query(models.Badge).all()
-    
-    earned_ids = {ub.badge_id for ub in user_badges}
-    earned_map = {ub.badge_id: ub.earned_at for ub in user_badges}
-    
-    return [
-        {
-            "id": b.id, "name": b.name, "description": b.description, "icon": b.icon,
-            "earned": b.id in earned_ids,
-            "earned_at": earned_map.get(b.id, None)
-        }
-        for b in all_badges
-    ]
+def get_badges(current_user: dict = Depends(get_current_user), db: Any = Depends(get_db)):
+    user_badges = list(db.user_badges.find({"user_id": current_user["id"]}))
+    all_badges = list(db.badges.find())
+
+    earned_map = {ub["badge_id"]: ub.get("earned_at") for ub in user_badges}
+    result = []
+    for badge in all_badges:
+        clean_badge = _clean(badge)
+        badge_id = clean_badge["id"]
+        result.append(
+            {
+                "id": badge_id,
+                "name": clean_badge["name"],
+                "description": clean_badge.get("description", ""),
+                "icon": clean_badge.get("icon", ""),
+                "earned": badge_id in earned_map,
+                "earned_at": earned_map.get(badge_id),
+            }
+        )
+    return result
 
 
 @router.get("/leaderboard")
-def get_leaderboard(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    streaks = db.query(models.Streak).order_by(models.Streak.total_points.desc()).limit(10).all()
+def get_leaderboard(db: Any = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    streaks = list(db.streaks.find().sort("total_points", -1).limit(10))
     result = []
-    for s in streaks:
-        user = db.query(models.User).filter(models.User.id == s.user_id).first()
+    for streak in streaks:
+        user = db.users.find_one({"id": streak.get("user_id")})
         if user:
-            result.append({
-                "username": user.username,
-                "full_name": user.full_name,
-                "points": s.total_points,
-                "streak": s.current_streak
-            })
+            result.append(
+                {
+                    "username": user.get("username", ""),
+                    "full_name": user.get("full_name", ""),
+                    "points": int(streak.get("total_points", 0)),
+                    "streak": int(streak.get("current_streak", 0)),
+                }
+            )
     return result
