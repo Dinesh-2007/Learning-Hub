@@ -22,6 +22,7 @@ import Notifications from './pages/Notifications';
 import InterviewDashboard from './pages/interview/InterviewDashboard';
 import InterviewQuestionBank from './pages/interview/InterviewQuestionBank';
 import MockInterview from './pages/interview/MockInterview';
+import InterviewPractice from './pages/interview/InterviewPractice';
 import InterviewPracticeTopics from './pages/interview/InterviewPracticeTopics';
 import ResumePreparation from './pages/interview/ResumePreparation';
 import InterviewExperience from './pages/interview/InterviewExperience';
@@ -88,6 +89,7 @@ export default function App() {
             <Route path={ROUTE_PATHS.interviewDashboard} element={<InterviewDashboard />} />
             <Route path={ROUTE_PATHS.interviewQuestionBank} element={<InterviewQuestionBank />} />
             <Route path={ROUTE_PATHS.interviewMock} element={<MockInterview />} />
+            <Route path={ROUTE_PATHS.interviewPractice} element={<InterviewPractice />} />
             <Route path={ROUTE_PATHS.interviewPracticeTopics} element={<InterviewPracticeTopics />} />
             <Route path={ROUTE_PATHS.interviewResumePrep} element={<ResumePreparation />} />
             <Route path={ROUTE_PATHS.interviewExperience} element={<InterviewExperience />} />

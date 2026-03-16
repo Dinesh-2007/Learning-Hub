@@ -1,0 +1,1 @@
+[print(line.rstrip()) for line in islice(f,120)] 

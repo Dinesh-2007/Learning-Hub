@@ -23,11 +23,9 @@ export const PRIMARY_NAV_LINKS = [
 
 export const INTERVIEW_NAV_LINKS = [
   { to: ROUTE_PATHS.interviewDashboard, label: 'Interview Dashboard' },
-  { to: ROUTE_PATHS.interviewQuestionBank, label: 'Interview Question Bank' },
+  { to: ROUTE_PATHS.interviewPractice, label: 'Interview Practice' },
   { to: ROUTE_PATHS.interviewMock, label: 'Mock Interview' },
-  { to: ROUTE_PATHS.interviewPracticeTopics, label: 'Interview Practice Topics' },
   { to: ROUTE_PATHS.interviewResumePrep, label: 'Resume Preparation' },
   { to: ROUTE_PATHS.interviewExperience, label: 'Interview Experience' },
-  { to: ROUTE_PATHS.interviewPerformance, label: 'Performance Tracker' },
-  { to: ROUTE_PATHS.interviewReadiness, label: 'Readiness Indicator' },
+  { to: ROUTE_PATHS.interviewAnalytics, label: 'Interview Analytics' },
 ];

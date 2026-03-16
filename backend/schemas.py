@@ -50,6 +50,24 @@ class ScheduleTaskOut(BaseModel):
     class Config:
         from_attributes = True
 
+
+class ScheduleTaskManualCreate(BaseModel):
+    title: str
+    description: Optional[str] = ""
+    subject: Optional[str] = ""
+    date: datetime
+    duration_hours: Optional[float] = 1.0
+    priority: Optional[str] = "medium"
+
+
+class ScheduleTaskReschedule(BaseModel):
+    date: datetime
+
+
+class ScheduleTaskUpdate(BaseModel):
+    priority: Optional[str] = None
+    is_completed: Optional[bool] = None
+
 class ScheduleCreate(BaseModel):
     title: str
     exam_date: Optional[datetime] = None

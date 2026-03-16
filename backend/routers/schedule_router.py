@@ -100,6 +100,77 @@ def toggle_task(task_id: int, current_user: models.User = Depends(get_current_us
     return {"id": task.id, "is_completed": task.is_completed}
 
 
+@router.post("/{schedule_id}/tasks", response_model=schemas.ScheduleTaskOut)
+def create_schedule_task(
+    schedule_id: int,
+    data: schemas.ScheduleTaskManualCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    schedule = db.query(models.StudySchedule).filter(
+        models.StudySchedule.id == schedule_id,
+        models.StudySchedule.user_id == current_user.id
+    ).first()
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+
+    task = models.ScheduleTask(
+        schedule_id=schedule.id,
+        title=data.title,
+        description=data.description,
+        subject=data.subject,
+        date=data.date,
+        duration_hours=data.duration_hours,
+        priority=(data.priority or "medium").lower()
+    )
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+    return task
+
+
+@router.put("/tasks/{task_id}/reschedule")
+def reschedule_task(
+    task_id: int,
+    data: schemas.ScheduleTaskReschedule,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    task = db.query(models.ScheduleTask).join(models.StudySchedule).filter(
+        models.ScheduleTask.id == task_id,
+        models.StudySchedule.user_id == current_user.id
+    ).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    task.date = data.date
+    db.commit()
+    return {"id": task.id, "date": task.date}
+
+
+@router.put("/tasks/{task_id}")
+def update_task(
+    task_id: int,
+    data: schemas.ScheduleTaskUpdate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    task = db.query(models.ScheduleTask).join(models.StudySchedule).filter(
+        models.ScheduleTask.id == task_id,
+        models.StudySchedule.user_id == current_user.id
+    ).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    if data.priority is not None:
+        task.priority = data.priority.lower()
+    if data.is_completed is not None:
+        task.is_completed = data.is_completed
+
+    db.commit()
+    return {"id": task.id, "priority": task.priority, "is_completed": task.is_completed}
+
+
 @router.delete("/{schedule_id}")
 def delete_schedule(schedule_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     schedule = db.query(models.StudySchedule).filter(
