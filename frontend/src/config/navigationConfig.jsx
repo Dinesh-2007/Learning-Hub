@@ -6,7 +6,6 @@ import {
   FiBarChart2,
   FiFileText,
   FiCheckCircle,
-  FiBell,
 } from 'react-icons/fi';
 import { ROUTE_PATHS } from './routeConfig';
 
@@ -18,7 +17,6 @@ export const PRIMARY_NAV_LINKS = [
   { to: ROUTE_PATHS.progressAnalytics, icon: FiBarChart2, label: 'Progress & Analytics' },
   { to: ROUTE_PATHS.tests, icon: FiFileText, label: 'Mock Tests' },
   { to: ROUTE_PATHS.readinessCheck, icon: FiCheckCircle, label: 'Readiness Check' },
-  { to: ROUTE_PATHS.reminders, icon: FiBell, label: 'Reminders' },
 ];
 
 export const INTERVIEW_NAV_LINKS = [

@@ -19,15 +19,12 @@ import Notes from './pages/Notes';
 import Analytics from './pages/Analytics';
 import Gamification from './pages/Gamification';
 import Notifications from './pages/Notifications';
+import InterviewAnalytics from './pages/interview/InterviewAnalytics';
 import InterviewDashboard from './pages/interview/InterviewDashboard';
-import InterviewQuestionBank from './pages/interview/InterviewQuestionBank';
 import MockInterview from './pages/interview/MockInterview';
 import InterviewPractice from './pages/interview/InterviewPractice';
-import InterviewPracticeTopics from './pages/interview/InterviewPracticeTopics';
 import ResumePreparation from './pages/interview/ResumePreparation';
 import InterviewExperience from './pages/interview/InterviewExperience';
-import PerformanceTracker from './pages/interview/PerformanceTracker';
-import ReadinessIndicator from './pages/interview/ReadinessIndicator';
 import ProgressAnalytics from './pages/ProgressAnalytics';
 import { ROUTE_PATHS } from './config/routeConfig';
 import './index.css';
@@ -87,14 +84,11 @@ export default function App() {
             <Route path={ROUTE_PATHS.notifications} element={<Notifications />} />
             <Route path={ROUTE_PATHS.interview} element={<Navigate to={ROUTE_PATHS.interviewDefault} replace />} />
             <Route path={ROUTE_PATHS.interviewDashboard} element={<InterviewDashboard />} />
-            <Route path={ROUTE_PATHS.interviewQuestionBank} element={<InterviewQuestionBank />} />
             <Route path={ROUTE_PATHS.interviewMock} element={<MockInterview />} />
             <Route path={ROUTE_PATHS.interviewPractice} element={<InterviewPractice />} />
-            <Route path={ROUTE_PATHS.interviewPracticeTopics} element={<InterviewPracticeTopics />} />
             <Route path={ROUTE_PATHS.interviewResumePrep} element={<ResumePreparation />} />
             <Route path={ROUTE_PATHS.interviewExperience} element={<InterviewExperience />} />
-            <Route path={ROUTE_PATHS.interviewPerformance} element={<PerformanceTracker />} />
-            <Route path={ROUTE_PATHS.interviewReadiness} element={<ReadinessIndicator />} />
+            <Route path={ROUTE_PATHS.interviewAnalytics} element={<InterviewAnalytics />} />
             <Route path="/interview/*" element={<Navigate to={ROUTE_PATHS.interviewDefault} replace />} />
           </Route>
         </Routes>

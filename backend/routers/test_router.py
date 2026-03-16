@@ -8,8 +8,104 @@ import models, schemas
 router = APIRouter(prefix="/api/tests", tags=["Mock Tests"])
 
 
+def _build_default_questions(topic: str):
+    return [
+        {
+            "id": 1,
+            "question": f"What is a key concept in {topic}?",
+            "options": ["Fundamentals", "Random Guess", "No Concept", "Irrelevant"],
+            "correct_answer": "Fundamentals",
+        },
+        {
+            "id": 2,
+            "question": f"Choose the best approach to improve in {topic}.",
+            "options": ["Consistent practice", "Avoid practice", "Skip basics", "Memorize only"],
+            "correct_answer": "Consistent practice",
+        },
+        {
+            "id": 3,
+            "question": f"In {topic}, which strategy helps accuracy most?",
+            "options": ["Review mistakes", "Rush attempts", "Ignore timing", "Skip analysis"],
+            "correct_answer": "Review mistakes",
+        },
+        {
+            "id": 4,
+            "question": f"A good test plan for {topic} should include:",
+            "options": ["Timed practice", "No schedule", "No feedback", "Only easy tasks"],
+            "correct_answer": "Timed practice",
+        },
+        {
+            "id": 5,
+            "question": f"Best way to retain {topic} concepts?",
+            "options": ["Spaced revision", "One-time reading", "No notes", "Skip recap"],
+            "correct_answer": "Spaced revision",
+        },
+    ]
+
+
+def _seed_missing_tests(db: Session):
+    """Guarantee minimum catalog size so each filter has enough cards."""
+    targets = {
+        "subject": {
+            "minimum": 10,
+            "subject": "Core Subjects",
+            "title_prefix": "Subject Mastery Test",
+            "description": "Mixed core-subject fundamentals and interview-oriented MCQs.",
+            "difficulty_cycle": ["easy", "medium", "hard"],
+            "duration": 25,
+            "marks": 50,
+            "topic": "Subject Fundamentals",
+        },
+        "aptitude": {
+            "minimum": 10,
+            "subject": "Aptitude",
+            "title_prefix": "Aptitude Practice Test",
+            "description": "Quantitative, logical reasoning, and verbal aptitude timed set.",
+            "difficulty_cycle": ["easy", "medium", "medium", "hard"],
+            "duration": 20,
+            "marks": 40,
+            "topic": "Aptitude",
+        },
+        "coding": {
+            "minimum": 10,
+            "subject": "DSA",
+            "title_prefix": "Coding Challenge Set",
+            "description": "Coding problem solving set with algorithmic and implementation focus.",
+            "difficulty_cycle": ["medium", "hard", "easy"],
+            "duration": 35,
+            "marks": 60,
+            "topic": "Coding",
+        },
+    }
+
+    inserted = False
+    for test_type, cfg in targets.items():
+        existing = db.query(models.MockTest).filter(models.MockTest.test_type == test_type).count()
+        missing = max(cfg["minimum"] - existing, 0)
+
+        for idx in range(missing):
+            difficulty = cfg["difficulty_cycle"][(existing + idx) % len(cfg["difficulty_cycle"])]
+            test_number = existing + idx + 1
+            test = models.MockTest(
+                title=f"{cfg['title_prefix']} {test_number}",
+                description=cfg["description"],
+                test_type=test_type,
+                subject=cfg["subject"],
+                difficulty=difficulty,
+                duration_minutes=cfg["duration"],
+                total_marks=cfg["marks"],
+                questions=_build_default_questions(cfg["topic"]),
+            )
+            db.add(test)
+            inserted = True
+
+    if inserted:
+        db.commit()
+
+
 @router.get("/", response_model=list[schemas.MockTestOut])
 def get_tests(test_type: str = None, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    _seed_missing_tests(db)
     q = db.query(models.MockTest)
     if test_type:
         q = q.filter(models.MockTest.test_type == test_type)

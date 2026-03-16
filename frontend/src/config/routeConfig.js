@@ -26,12 +26,8 @@ export const ROUTE_PATHS = {
   interviewDefault: '/interview/dashboard',
   interviewDashboard: '/interview/dashboard',
   interviewPractice: '/interview/practice',
-  interviewQuestionBank: '/interview/question-bank',
   interviewMock: '/interview/mock-interview',
-  interviewPracticeTopics: '/interview/practice-topics',
   interviewResumePrep: '/interview/resume-prep',
   interviewExperience: '/interview/experience',
   interviewAnalytics: '/interview/analytics',
-  interviewPerformance: '/interview/performance',
-  interviewReadiness: '/interview/readiness',
 };

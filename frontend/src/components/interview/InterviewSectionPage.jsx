@@ -12,8 +12,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import Topbar from '../../components/Topbar';
-import StatCard from '../../components/StatCard';
+import Topbar from '../Topbar';
+import StatCard from '../StatCard';
 import {
   INTERVIEW_MODULES,
   MODULE_VISUALS,

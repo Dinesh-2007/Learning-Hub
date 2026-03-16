@@ -18,10 +18,23 @@ export default function ScheduleCreate() {
     try {
       const subjects = form.subjects.split(',').map(s => s.trim()).filter(Boolean);
       const priority = form.priority_subjects.split(',').map(s => s.trim()).filter(Boolean);
+      const examDate = new Date(form.exam_date);
+
+      if (!form.exam_date || Number.isNaN(examDate.getTime())) {
+        toast.error('Please select a valid exam date.');
+        setLoading(false);
+        return;
+      }
+
+      if (subjects.length === 0) {
+        toast.error('Please enter at least one subject.');
+        setLoading(false);
+        return;
+      }
       
       await api.post('/schedules/auto-generate', {
         title: form.title,
-        exam_date: new Date(form.exam_date).toISOString(),
+        exam_date: examDate.toISOString(),
         subjects,
         hours_per_day: parseFloat(form.hours_per_day),
         priority_subjects: priority
@@ -29,7 +42,11 @@ export default function ScheduleCreate() {
       toast.success('Schedule generated!');
       navigate('/schedule');
     } catch (err) {
-      toast.error('Failed to create schedule');
+      const detail = err?.response?.data?.detail;
+      const message = Array.isArray(detail)
+        ? detail.map(d => d.msg).join(', ')
+        : detail || err.message || 'Failed to create schedule';
+      toast.error(message);
     }
     setLoading(false);
   };
