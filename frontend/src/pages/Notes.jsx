@@ -1,15 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import Topbar from '../components/Topbar';
 import api from '../api/axios';
-import { FiPlus, FiEdit2, FiTrash2, FiBookmark, FiSearch, FiArrowLeft } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiBookmark, FiSearch } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { ROUTE_PATHS } from '../config/routeConfig';
 
 export default function Notes() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const fromLearningResources = Boolean(location.state?.fromLearningResources);
   const [notes, setNotes] = useState([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all'); // all, bookmarked
@@ -59,11 +54,6 @@ export default function Notes() {
     <div className="page">
       <Topbar title="Notes" />
       <div className="page-content">
-        {fromLearningResources && (
-          <button className="btn-back" onClick={() => navigate(ROUTE_PATHS.learningResources)}>
-            <FiArrowLeft /> Back to Learning Resources
-          </button>
-        )}
         <div className="page-header">
           <div className="filter-bar">
             <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All Notes</button>

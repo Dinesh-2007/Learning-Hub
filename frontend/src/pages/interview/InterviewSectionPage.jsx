@@ -1,25 +1,20 @@
 import { useMemo, useState } from 'react';
-import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft } from 'react-icons/fi';
-import Topbar from '../components/Topbar';
-import StatCard from '../components/StatCard';
+import { Navigate } from 'react-router-dom';
+import Topbar from '../../components/Topbar';
+import StatCard from '../../components/StatCard';
 import {
   INTERVIEW_MODULES,
   MODULE_VISUALS,
   WINDOW_MULTIPLIER,
   WINDOW_OPTIONS,
-} from '../config/interviewConfig';
-import { ROUTE_PATHS } from '../config/routeConfig';
+} from '../../config/interviewConfig';
+import { ROUTE_PATHS } from '../../config/routeConfig';
 
-export default function Interview() {
-  const { section } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const fromLearningResources = Boolean(location.state?.fromLearningResources);
+export default function InterviewSectionPage({ sectionKey }) {
   const [windowFilter, setWindowFilter] = useState('30D');
 
-  const moduleData = useMemo(() => INTERVIEW_MODULES[section], [section]);
-  const visualData = useMemo(() => MODULE_VISUALS[section] || MODULE_VISUALS.dashboard, [section]);
+  const moduleData = useMemo(() => INTERVIEW_MODULES[sectionKey], [sectionKey]);
+  const visualData = useMemo(() => MODULE_VISUALS[sectionKey] || MODULE_VISUALS.dashboard, [sectionKey]);
   const multiplier = WINDOW_MULTIPLIER[windowFilter] || 1;
 
   const adjustedCoverage = useMemo(
@@ -35,11 +30,6 @@ export default function Interview() {
     <div className="page">
       <Topbar title={moduleData.title} />
       <div className="page-content">
-        {fromLearningResources && section === 'resources' && (
-          <button className="btn-back" onClick={() => navigate(ROUTE_PATHS.learningResources)}>
-            <FiArrowLeft /> Back to Learning Resources
-          </button>
-        )}
         <div className="card interview-intro-card">
           <h3>{moduleData.title}</h3>
           <p className="interview-intro-text">{moduleData.description}</p>

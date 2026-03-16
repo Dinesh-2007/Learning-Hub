@@ -19,8 +19,14 @@ import Notes from './pages/Notes';
 import Analytics from './pages/Analytics';
 import Gamification from './pages/Gamification';
 import Notifications from './pages/Notifications';
-import Interview from './pages/Interview';
-import LearningResources from './pages/LearningResources';
+import InterviewDashboard from './pages/interview/InterviewDashboard';
+import InterviewQuestionBank from './pages/interview/InterviewQuestionBank';
+import MockInterview from './pages/interview/MockInterview';
+import InterviewPracticeTopics from './pages/interview/InterviewPracticeTopics';
+import ResumePreparation from './pages/interview/ResumePreparation';
+import InterviewExperience from './pages/interview/InterviewExperience';
+import PerformanceTracker from './pages/interview/PerformanceTracker';
+import ReadinessIndicator from './pages/interview/ReadinessIndicator';
 import ProgressAnalytics from './pages/ProgressAnalytics';
 import { ROUTE_PATHS } from './config/routeConfig';
 import './index.css';
@@ -60,13 +66,12 @@ export default function App() {
           <Route element={<ProtectedLayout />}>
             <Route path={ROUTE_PATHS.dashboard} element={<Dashboard />} />
             <Route path={ROUTE_PATHS.studyPlanner} element={<Schedule />} />
-            <Route path={ROUTE_PATHS.learningResources} element={<LearningResources />} />
             <Route path={ROUTE_PATHS.progressAnalytics} element={<ProgressAnalytics />} />
             <Route path={ROUTE_PATHS.readinessCheck} element={<Readiness />} />
             <Route path={ROUTE_PATHS.reminders} element={<Notifications />} />
             <Route path={ROUTE_PATHS.schedule} element={<Schedule />} />
             <Route path={ROUTE_PATHS.scheduleCreate} element={<ScheduleCreate />} />
-            <Route path={ROUTE_PATHS.resources} element={<ResourceHub />} />
+            <Route path={ROUTE_PATHS.resourceHub} element={<ResourceHub />} />
             <Route path={ROUTE_PATHS.resourceById} element={<ResourceHub />} />
             <Route path={ROUTE_PATHS.progress} element={<Progress />} />
             <Route path={ROUTE_PATHS.tests} element={<MockTests />} />
@@ -80,7 +85,15 @@ export default function App() {
             <Route path={ROUTE_PATHS.gamification} element={<Gamification />} />
             <Route path={ROUTE_PATHS.notifications} element={<Notifications />} />
             <Route path={ROUTE_PATHS.interview} element={<Navigate to={ROUTE_PATHS.interviewDefault} replace />} />
-            <Route path={ROUTE_PATHS.interviewSection} element={<Interview />} />
+            <Route path={ROUTE_PATHS.interviewDashboard} element={<InterviewDashboard />} />
+            <Route path={ROUTE_PATHS.interviewQuestionBank} element={<InterviewQuestionBank />} />
+            <Route path={ROUTE_PATHS.interviewMock} element={<MockInterview />} />
+            <Route path={ROUTE_PATHS.interviewPracticeTopics} element={<InterviewPracticeTopics />} />
+            <Route path={ROUTE_PATHS.interviewResumePrep} element={<ResumePreparation />} />
+            <Route path={ROUTE_PATHS.interviewExperience} element={<InterviewExperience />} />
+            <Route path={ROUTE_PATHS.interviewPerformance} element={<PerformanceTracker />} />
+            <Route path={ROUTE_PATHS.interviewReadiness} element={<ReadinessIndicator />} />
+            <Route path="/interview/*" element={<Navigate to={ROUTE_PATHS.interviewDefault} replace />} />
           </Route>
         </Routes>
       </AuthProvider>

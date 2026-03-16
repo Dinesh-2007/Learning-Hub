@@ -1,18 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import Topbar from '../components/Topbar';
 import api from '../api/axios';
-import { FiPlus, FiTrash2, FiExternalLink, FiFilter, FiSearch, FiArrowLeft } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiExternalLink, FiSearch } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { ROUTE_PATHS } from '../config/routeConfig';
 
 const CATEGORIES = ['all', 'notes', 'coding', 'aptitude', 'interview', 'general'];
 const TYPE_ICONS = { link: '🔗', pdf: '📄', note: '📝', video: '🎥' };
 
 export default function ResourceHub() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const fromLearningResources = Boolean(location.state?.fromLearningResources);
   const [resources, setResources] = useState([]);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -49,11 +44,6 @@ export default function ResourceHub() {
     <div className="page">
       <Topbar title="Resource Hub" />
       <div className="page-content">
-        {fromLearningResources && (
-          <button className="btn-back" onClick={() => navigate(ROUTE_PATHS.learningResources)}>
-            <FiArrowLeft /> Back to Learning Resources
-          </button>
-        )}
         <div className="page-header">
           <div className="filter-bar">
             {CATEGORIES.map(c => (
