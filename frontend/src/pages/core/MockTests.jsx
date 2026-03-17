@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Topbar from '../../components/Topbar';
 import api from '../../api/axios';
 import { FiPlay, FiClock, FiBarChart2 } from 'react-icons/fi';
+import { MOCK_TESTS } from '../../data/mockTests';
 import {
   Radar,
   RadarChart,
@@ -98,10 +99,16 @@ export default function MockTests() {
   const [allTests, setAllTests] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [activeTest, setActiveTest] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [currentQ, setCurrentQ] = useState(0);
+  const [result, setResult] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get('/tests').then(r => setAllTests(r.data)).catch(() => setAllTests([]));
+    api.get('/tests')
+      .then(r => setAllTests(r.data && r.data.length ? r.data : MOCK_TESTS))
+      .catch(() => setAllTests(MOCK_TESTS));
   }, []);
 
   useEffect(() => {
@@ -189,6 +196,29 @@ export default function MockTests() {
     return { concepts, radarData, strong, weak };
   }, [tests, submissions]);
 
+  const startTest = (test) => {
+    setActiveTest(test);
+    setAnswers({});
+    setCurrentQ(0);
+    setResult(null);
+  };
+
+  const submitTest = () => {
+    if (!activeTest) return;
+    let correct = 0;
+    const answered = Object.keys(answers).length;
+    activeTest.questions.forEach(q => {
+      if (answers[q.id] === q.correct_answer) correct += 1;
+    });
+    setResult({ correct, total: activeTest.questions.length, answered });
+  };
+
+  const closeModal = () => {
+    setActiveTest(null);
+    setAnswers({});
+    setResult(null);
+  };
+
   return (
     <div className="page">
       <Topbar title="Mock Tests" />
@@ -267,7 +297,7 @@ export default function MockTests() {
                 <span>📝 {t.questions?.length || 0} questions</span>
               </div>
               {t.subject && <span className="test-subject">{t.subject}</span>}
-              <button className="btn-primary full-width" onClick={() => navigate(`/tests/${t.id}/take`)}>
+              <button className="btn-primary full-width" onClick={() => startTest(t)}>
                 <FiPlay /> Start Test
               </button>
             </div>
@@ -280,6 +310,61 @@ export default function MockTests() {
           </div>
         )}
       </div>
+
+      {activeTest && (
+        <div className="quiz-modal">
+          <div className="quiz-dialog card">
+            <div className="quiz-header">
+              <div>
+                <h3>{activeTest.title}</h3>
+                <p className="test-desc">{activeTest.description}</p>
+              </div>
+              <button className="btn-secondary" onClick={closeModal}>Close</button>
+            </div>
+
+            {result ? (
+              <div className="quiz-result">
+                <h4>Score: {result.correct}/{result.total}</h4>
+                <p>Answered: {result.answered} of {result.total}</p>
+                <button className="btn-primary" onClick={() => { setResult(null); setAnswers({}); setCurrentQ(0); }}>Retry</button>
+              </div>
+            ) : (
+              <>
+                <div className="quiz-meta">
+                  <span>Question {currentQ + 1} / {activeTest.questions.length}</span>
+                  <span>{activeTest.subject}</span>
+                </div>
+                <div className="quiz-question">
+                  {activeTest.questions[currentQ].question}
+                </div>
+                <div className="quiz-options">
+                  {activeTest.questions[currentQ].options.map(opt => (
+                    <button
+                      key={opt}
+                      className={`quiz-option ${answers[activeTest.questions[currentQ].id] === opt ? 'selected' : ''}`}
+                      onClick={() => setAnswers({ ...answers, [activeTest.questions[currentQ].id]: opt })}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+                <div className="quiz-actions">
+                  <button
+                    className="btn-secondary"
+                    disabled={currentQ === 0}
+                    onClick={() => setCurrentQ(q => Math.max(0, q - 1))}
+                  >Prev</button>
+                  {currentQ < activeTest.questions.length - 1 ? (
+                    <button className="btn-primary" onClick={() => setCurrentQ(q => Math.min(activeTest.questions.length - 1, q + 1))}>Next</button>
+                  ) : (
+                    <button className="btn-primary" onClick={submitTest}>Submit</button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

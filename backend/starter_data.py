@@ -148,18 +148,54 @@ def ensure_user_starter_data(db: Any, user_id: int) -> None:
                     }
                 )
 
-    if db.readiness_checkins.count_documents({"user_id": user_id}) == 0:
-        for subject, confidence in [("Data Structures", 4), ("DBMS", 3), ("Operating Systems", 2), ("Aptitude", 4), ("System Design", 1)]:
+    readiness_templates = [
+        (14, "Data Structures", 3, "Covered arrays and strings; need better speed in two-pointer problems."),
+        (12, "DBMS", 2, "Revise ACID properties and conflict serializability with examples."),
+        (10, "Operating Systems", 2, "Memory management and paging still feel weak under timed recall."),
+        (9, "Aptitude", 3, "Good at percentages; improve permutations and combinations accuracy."),
+        (8, "Computer Networks", 2, "Need revision on TCP congestion control and subnetting drills."),
+        (6, "Data Structures", 4, "Solved 20 medium-level problems; graph traversal confidence improved."),
+        (5, "DBMS", 3, "Join optimization and indexing concepts are clearer after practice."),
+        (4, "Operating Systems", 3, "Process synchronization improved after revising semaphores and monitors."),
+        (3, "Aptitude", 4, "Time-per-question improved on arithmetic and ratio sets."),
+        (2, "Computer Networks", 3, "OSI/TCP-IP mapping and protocol layering now mostly comfortable."),
+        (1, "System Design", 2, "Started high-level design prep; need better component trade-off reasoning."),
+        (0, "Interview", 3, "Communication improved in mock sessions; tighten STAR structure in responses."),
+    ]
+
+    existing_checkins = list(
+        db.readiness_checkins.find(
+            {"user_id": user_id},
+            {"_id": 0, "subject": 1, "confidence_level": 1, "notes": 1},
+        )
+    )
+    existing_signatures = {
+        (
+            checkin.get("subject", ""),
+            int(checkin.get("confidence_level", 0)),
+            checkin.get("notes", ""),
+        )
+        for checkin in existing_checkins
+    }
+
+    # Keep seeded readiness data rich enough for realistic dashboards.
+    if len(existing_checkins) < 10:
+        for days_ago, subject, confidence, notes in readiness_templates:
+            signature = (subject, confidence, notes)
+            if signature in existing_signatures:
+                continue
+
             db.readiness_checkins.insert_one(
                 {
                     "id": get_next_id(db, "readiness_checkins"),
                     "user_id": user_id,
                     "subject": subject,
                     "confidence_level": confidence,
-                    "notes": "",
-                    "checked_at": now,
+                    "notes": notes,
+                    "checked_at": now - timedelta(days=days_ago),
                 }
             )
+            existing_signatures.add(signature)
 
     if db.study_logs.count_documents({"user_id": user_id}) == 0:
         for i in range(7):

@@ -3,9 +3,20 @@ import Topbar from '../../components/Topbar';
 import api from '../../api/axios';
 import { FiPlus, FiTrash2, FiExternalLink, FiSearch } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { MOCK_RESOURCES } from '../../data/resourceMock';
 
 const CATEGORIES = ['all', 'notes', 'coding', 'aptitude', 'interview', 'general'];
 const TYPE_ICONS = { link: '🔗', pdf: '📄', note: '📝', video: '🎥' };
+
+function resolveResourceLink(resource) {
+  const raw = (resource.url || '').trim();
+  if (raw) {
+    return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  }
+
+  const query = encodeURIComponent([resource.title, resource.subject].filter(Boolean).join(' '));
+  return `https://www.google.com/search?q=${query}`;
+}
 
 export default function ResourceHub() {
   const [resources, setResources] = useState([]);
@@ -14,15 +25,16 @@ export default function ResourceHub() {
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', resource_type: 'link', category: 'general', subject: '', url: '', tags: '' });
 
-  useEffect(() => { load(); }, [filter]);
+  useEffect(() => { load(); }, []);
   const load = () => {
-    const params = filter !== 'all' ? `?category=${filter}` : '';
-    api.get(`/resources${params}`).then(r => setResources(r.data));
+    api.get('/resources/')
+      .then(r => setResources(r.data && r.data.length ? r.data : MOCK_RESOURCES))
+      .catch(() => setResources(MOCK_RESOURCES));
   };
 
   const addResource = async (e) => {
     e.preventDefault();
-    await api.post('/resources', { ...form, tags: form.tags.split(',').map(t => t.trim()).filter(Boolean) });
+    await api.post('/resources/', { ...form, tags: form.tags.split(',').map(t => t.trim()).filter(Boolean) });
     toast.success('Resource added!');
     setShowAdd(false);
     setForm({ title: '', description: '', resource_type: 'link', category: 'general', subject: '', url: '', tags: '' });
@@ -35,10 +47,17 @@ export default function ResourceHub() {
     load();
   };
 
-  const filtered = resources.filter(r => 
-    r.title.toLowerCase().includes(search.toLowerCase()) || 
-    r.subject.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = resources
+    .filter(r => filter === 'all' || r.category === filter)
+    .filter(r => {
+      const q = search.toLowerCase();
+      const tags = (r.tags || []).join(' ').toLowerCase();
+      return (
+        r.title.toLowerCase().includes(q) ||
+        (r.subject || '').toLowerCase().includes(q) ||
+        tags.includes(q)
+      );
+    });
 
   return (
     <div className="page">
@@ -97,20 +116,31 @@ export default function ResourceHub() {
         <div className="resource-grid">
           {filtered.map(r => (
             <div key={r.id} className="card resource-card">
+              {(() => {
+                const resourceLink = resolveResourceLink(r);
+                return (
+                  <>
               <div className="resource-header">
                 <span className="resource-type-icon">{TYPE_ICONS[r.resource_type] || '📎'}</span>
                 <span className={`resource-category ${r.category}`}>{r.category}</span>
               </div>
-              <h4>{r.title}</h4>
+              <h4>
+                <a href={resourceLink} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+                  {r.title}
+                </a>
+              </h4>
               <p className="resource-desc">{r.description}</p>
               {r.subject && <span className="resource-subject">{r.subject}</span>}
               <div className="resource-tags">
                 {(r.tags || []).map(tag => <span key={tag} className="tag">{tag}</span>)}
               </div>
               <div className="resource-actions">
-                {r.url && <a href={r.url} target="_blank" rel="noreferrer" className="btn-sm"><FiExternalLink /> Open</a>}
+                <a href={resourceLink} target="_blank" rel="noreferrer" className="btn-sm"><FiExternalLink /> Open</a>
                 <button className="btn-sm danger" onClick={() => deleteResource(r.id)}><FiTrash2 /></button>
               </div>
+                  </>
+                );
+              })()}
             </div>
           ))}
         </div>
