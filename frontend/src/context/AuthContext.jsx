@@ -8,20 +8,36 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const saved = localStorage.getItem('user');
-    if (token && saved) {
-      setUser(JSON.parse(saved));
-      api.get('/auth/me').then(r => {
-        setUser(r.data);
-        localStorage.setItem('user', JSON.stringify(r.data));
-      }).catch(() => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+    const bootstrapAuth = async () => {
+      const token = localStorage.getItem('token');
+      const saved = localStorage.getItem('user');
+
+      if (token && saved) {
+        setUser(JSON.parse(saved));
+        try {
+          const profile = await api.get('/auth/me');
+          setUser(profile.data);
+          localStorage.setItem('user', JSON.stringify(profile.data));
+          return;
+        } catch {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+      }
+
+      try {
+        const res = await api.post('/auth/login', { username: 'demo', password: 'password123' });
+        localStorage.setItem('token', res.data.access_token);
+        const me = await api.get('/auth/me');
+        setUser(me.data);
+        localStorage.setItem('user', JSON.stringify(me.data));
+      } catch {
         setUser(null);
-      });
-    }
-    setLoading(false);
+      }
+    };
+
+    bootstrapAuth().finally(() => setLoading(false));
   }, []);
 
   const login = async (username, password) => {

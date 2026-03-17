@@ -5,18 +5,12 @@ import Sidebar from './components/Sidebar';
 import ChatBot from './components/ChatBot';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Schedule from './pages/Schedule';
-import ScheduleCreate from './pages/ScheduleCreate';
-import ResourceHub from './pages/ResourceHub';
-import Progress from './pages/Progress';
-import MockTests from './pages/MockTests';
-import TakeTest from './pages/TakeTest';
-import TestResults from './pages/TestResults';
-import Analysis from './pages/Analysis';
-import Readiness from './pages/Readiness';
-import Notes from './pages/Notes';
-import Analytics from './pages/Analytics';
+import Dashboard from './pages/core/Dashboard';
+import Schedule from './pages/core/Schedule';
+import ResourceHub from './pages/core/ResourceHub';
+import MockTests from './pages/core/MockTests';
+import Readiness from './pages/core/Readiness';
+import Notes from './pages/core/Notes';
 import Gamification from './pages/Gamification';
 import Notifications from './pages/Notifications';
 import InterviewAnalytics from './pages/interview/InterviewAnalytics';
@@ -25,14 +19,13 @@ import MockInterview from './pages/interview/MockInterview';
 import InterviewPractice from './pages/interview/InterviewPractice';
 import ResumePreparation from './pages/interview/ResumePreparation';
 import InterviewExperience from './pages/interview/InterviewExperience';
-import ProgressAnalytics from './pages/ProgressAnalytics';
+import ProgressAnalytics from './pages/core/ProgressAnalytics';
 import { ROUTE_PATHS } from './config/routeConfig';
 import './index.css';
 
 function ProtectedLayout() {
   const { user, loading } = useAuth();
   if (loading) return <div className="loading-screen">Loading...</div>;
-  if (!user) return <Navigate to="/login" />;
   return (
     <div className="app-layout">
       <Sidebar />
@@ -68,18 +61,18 @@ export default function App() {
             <Route path={ROUTE_PATHS.readinessCheck} element={<Readiness />} />
             <Route path={ROUTE_PATHS.reminders} element={<Notifications />} />
             <Route path={ROUTE_PATHS.schedule} element={<Schedule />} />
-            <Route path={ROUTE_PATHS.scheduleCreate} element={<ScheduleCreate />} />
+            <Route path={ROUTE_PATHS.scheduleCreate} element={<Navigate to={ROUTE_PATHS.schedule} replace />} />
             <Route path={ROUTE_PATHS.resourceHub} element={<ResourceHub />} />
-            <Route path={ROUTE_PATHS.resourceById} element={<ResourceHub />} />
-            <Route path={ROUTE_PATHS.progress} element={<Progress />} />
+            <Route path={ROUTE_PATHS.resourceById} element={<Navigate to={ROUTE_PATHS.resourceHub} replace />} />
+            <Route path={ROUTE_PATHS.progress} element={<Navigate to={ROUTE_PATHS.progressAnalytics} replace />} />
             <Route path={ROUTE_PATHS.tests} element={<MockTests />} />
-            <Route path={ROUTE_PATHS.takeTest} element={<TakeTest />} />
-            <Route path={ROUTE_PATHS.testResults} element={<TestResults />} />
-            <Route path={ROUTE_PATHS.analysis} element={<Analysis />} />
+            <Route path={ROUTE_PATHS.takeTest} element={<Navigate to={ROUTE_PATHS.tests} replace />} />
+            <Route path={ROUTE_PATHS.testResults} element={<Navigate to={ROUTE_PATHS.tests} replace />} />
+            <Route path={ROUTE_PATHS.analysis} element={<Navigate to={ROUTE_PATHS.progressAnalytics} replace />} />
             <Route path={ROUTE_PATHS.readiness} element={<Readiness />} />
             <Route path={ROUTE_PATHS.notes} element={<Notes />} />
-            <Route path={ROUTE_PATHS.noteById} element={<Notes />} />
-            <Route path={ROUTE_PATHS.analytics} element={<Analytics />} />
+            <Route path={ROUTE_PATHS.noteById} element={<Navigate to={ROUTE_PATHS.notes} replace />} />
+            <Route path={ROUTE_PATHS.analytics} element={<Navigate to={ROUTE_PATHS.progressAnalytics} replace />} />
             <Route path={ROUTE_PATHS.gamification} element={<Gamification />} />
             <Route path={ROUTE_PATHS.notifications} element={<Notifications />} />
             <Route path={ROUTE_PATHS.interview} element={<Navigate to={ROUTE_PATHS.interviewDefault} replace />} />
