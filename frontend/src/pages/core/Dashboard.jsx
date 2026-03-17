@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import Topbar from '../components/Topbar';
-import StatCard from '../components/StatCard';
-import ProgressRing from '../components/ProgressRing';
-import api from '../api/axios';
+import Topbar from '../../components/Topbar';
+import StatCard from '../../components/StatCard';
+import ProgressRing from '../../components/ProgressRing';
+import api from '../../api/axios';
 import { FiCalendar, FiBookOpen, FiCheckCircle, FiTrendingUp, FiAward, FiClock } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { Line, Bar } from 'react-chartjs-2';
@@ -11,8 +11,8 @@ import {
   LIGHT_CHART_OPTIONS,
   SCORE_DATASET_STYLES,
   SUBJECT_BREAKDOWN_DATASET_STYLES,
-} from '../config/chartConfig';
-import { PROGRESS_RING_COLOR } from '../config/pageConstants';
+} from '../../config/chartConfig';
+import { PROGRESS_RING_COLOR } from '../../config/pageConstants';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 

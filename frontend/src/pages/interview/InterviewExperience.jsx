@@ -1,4 +1,4 @@
-import InterviewSectionPage from '../../components/interview/InterviewSectionPage';
+import InterviewSectionPage from './InterviewSectionPage';
 
 export default function InterviewExperience() {
   return <InterviewSectionPage sectionKey="experience" />;

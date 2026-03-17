@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import Topbar from '../components/Topbar';
-import api from '../api/axios';
+import Topbar from '../../components/Topbar';
+import api from '../../api/axios';
 import { FiPlus } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import {
   READINESS_EMPTY_CONFIDENCE_COLOR,
   READINESS_LEVEL_COLORS,
   READINESS_LEVELS,
-} from '../config/pageConstants';
+} from '../../config/pageConstants';
 
 export default function Readiness() {
   const [checkins, setCheckins] = useState([]);

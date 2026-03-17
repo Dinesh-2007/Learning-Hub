@@ -12,14 +12,14 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import Topbar from '../Topbar';
-import StatCard from '../StatCard';
+import Topbar from '../../components/Topbar';
+import StatCard from '../../components/StatCard';
 import {
   INTERVIEW_MODULES,
   MODULE_VISUALS,
   WINDOW_MULTIPLIER,
   WINDOW_OPTIONS,
-} from '../../config/interviewConfig';
+} from './interviewConfig';
 import { ROUTE_PATHS } from '../../config/routeConfig';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, RadialLinearScale, Filler, Tooltip, Legend);

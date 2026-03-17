@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Topbar from '../components/Topbar';
-import api from '../api/axios';
+import Topbar from '../../components/Topbar';
+import api from '../../api/axios';
 import { FiPlay, FiClock, FiBarChart2 } from 'react-icons/fi';
 import {
   Radar,

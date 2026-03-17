@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import Topbar from '../components/Topbar';
-import { ROUTE_PATHS } from '../config/routeConfig';
+import Topbar from '../../components/Topbar';
+import { ROUTE_PATHS } from '../../config/routeConfig';
 
 const ANALYTICS_SECTIONS = [
   { key: 'syllabus-completion', label: 'Syllabus Completion', route: ROUTE_PATHS.progress },

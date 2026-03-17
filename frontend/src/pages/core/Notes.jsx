@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import Topbar from '../components/Topbar';
-import api from '../api/axios';
+import Topbar from '../../components/Topbar';
+import api from '../../api/axios';
 import { FiPlus, FiEdit2, FiTrash2, FiBookmark, FiSearch } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
